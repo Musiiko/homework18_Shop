@@ -15,12 +15,12 @@ public class SelectService {
                                 "pr.description, " +
                                 "o.order_number, " +
                                 "o.order_date " +
-                        "FROM products pr\n" +
-                        "INNER JOIN product_order po\n" +
-                        "ON pr.product_id = po.FK_Product\n" +
-                        "INNER JOIN orders o\n" +
-                        "ON o.order_id = po.FK_Order\n" +
-                        "WHERE o.order_number = ?;");
+                                "FROM products pr\n" +
+                                "INNER JOIN product_order po\n" +
+                                "ON pr.product_id = po.FK_Product\n" +
+                                "INNER JOIN orders o\n" +
+                                "ON o.order_id = po.FK_Order\n" +
+                                "WHERE o.order_number = ?;");
         statement.setString(1, number);
 
         ResultSet resultSet = statement.executeQuery();
@@ -98,7 +98,7 @@ public class SelectService {
 
         statement.setString(1, name);
 
-        try(ResultSet resultSet = statement.executeQuery()) {
+        try (ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 String orderNumber = resultSet.getString("order_number");
