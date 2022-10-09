@@ -7,7 +7,7 @@ import org.example.domain.Product;
 import java.sql.*;
 
 public class UpdateService {
-    public static void insertProduct(Product product) throws SQLException {
+    public void insertProduct(Product product) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
@@ -19,7 +19,7 @@ public class UpdateService {
         statement.executeUpdate();
     }
 
-    public static void insertOrder(Order order) throws SQLException {
+    public void insertOrder(Order order) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
@@ -30,7 +30,7 @@ public class UpdateService {
         statement.executeUpdate();
     }
 
-    public static void addProductToOrder(int orderId, int productId, int count) throws SQLException {
+    public void addProductToOrder(int orderId, int productId, int count) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
@@ -42,7 +42,7 @@ public class UpdateService {
         statement.executeUpdate();
     }
 
-    public static void deleteInfoOrder(int productId, int count) throws SQLException {
+    public void deleteInfoOrder(int productId, int count) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =

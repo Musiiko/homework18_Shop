@@ -1,21 +1,19 @@
 package org.example.service;
 
 import org.example.DbConnector;
+import org.example.domain.Product;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SelectService {
-    public static void showOrdersByNumber(String number) throws SQLException {
+    public void showOrderByNumber(String number) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
                 connection.prepareStatement(
-                        "SELECT pr.price, " +
-                                "pr.name, " +
-                                "pr.description, " +
-                                "o.order_number, " +
-                                "o.order_date " +
-                                "FROM products pr\n" +
+                        "SELECT * FROM products pr\n" +
                                 "INNER JOIN product_order po\n" +
                                 "ON pr.product_id = po.FK_Product\n" +
                                 "INNER JOIN orders o\n" +
@@ -25,10 +23,13 @@ public class SelectService {
 
         ResultSet resultSet = statement.executeQuery();
 
+        List<Product> products = new ArrayList<>();
+
         while (resultSet.next()) {
             float price = resultSet.getFloat("price");
             String name = resultSet.getString("name");
             String description = resultSet.getString("description");
+            int productId = resultSet.getInt("product_id");
             String orderNumber = resultSet.getString("order_number");
             Date date = resultSet.getDate("order_date");
 
@@ -36,7 +37,7 @@ public class SelectService {
         }
     }
 
-    public static void showOrdersBySumAndCount(float sum, int count) throws SQLException {
+    public void showOrdersBySumAndCount(float sum, int count) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
@@ -61,7 +62,7 @@ public class SelectService {
         }
     }
 
-    public static void showOrdersByProductName(String name) throws SQLException {
+    public void showOrdersByProductName(String name) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
@@ -83,7 +84,7 @@ public class SelectService {
         }
     }
 
-    public static void showOrdersWithoutProductAndCurrentDate(String name) throws SQLException {
+    public void showOrdersWithoutProductAndCurrentDate(String name) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
