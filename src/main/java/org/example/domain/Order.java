@@ -3,6 +3,7 @@ package org.example.domain;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Order {
     private int id;
@@ -21,6 +22,14 @@ public class Order {
         this(date, number);
         this.id = id;
         products = new ArrayList<>();
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
     }
 
     public void addProduct(Product product) {
@@ -50,4 +59,15 @@ public class Order {
     public void setDate(LocalDate date) {
         this.date = date;
     }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", number='" + number + '\'' +
+                ", date=" + date +
+                ", products=" + products +
+                '}';
+    }
+
 }

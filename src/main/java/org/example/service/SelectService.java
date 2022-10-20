@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.DbConnector;
+import org.example.domain.Order;
 import org.example.domain.Product;
 
 import java.sql.*;
@@ -8,7 +9,39 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SelectService {
-    public void showOrderByNumber(String number) throws SQLException {
+    public Order showOrderByNumber(String number) throws SQLException {
+        Connection connection = DbConnector.getConnection();
+
+        PreparedStatement statement =
+                connection.prepareStatement(
+                        "SELECT * FROM orders o\n" +
+                                "WHERE o.order_number = ?;");
+        statement.setString(1, number);
+
+        Order order = null;
+
+        try(ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int orderId = resultSet.getInt("order_id");
+                String orderNumber = resultSet.getString("order_number");
+                Date date = resultSet.getDate("order_date");
+
+                order = new Order(orderId, orderNumber, date.toLocalDate());
+            }
+
+            List<Product> products = findProductsByOrderId(order.getId());
+
+            order.setProducts(products);
+        }
+
+        return order;
+
+    }
+
+    private List<Product> findProductsByOrderId(int orderId) throws SQLException {
+        List<Product> products = new ArrayList<>();
+
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
@@ -16,33 +49,32 @@ public class SelectService {
                         "SELECT * FROM products pr\n" +
                                 "INNER JOIN product_order po\n" +
                                 "ON pr.product_id = po.FK_Product\n" +
-                                "INNER JOIN orders o\n" +
-                                "ON o.order_id = po.FK_Order\n" +
-                                "WHERE o.order_number = ?;");
-        statement.setString(1, number);
+                                "WHERE po.FK_Order = ?;");
+        statement.setInt(1, orderId);
 
-        ResultSet resultSet = statement.executeQuery();
+        try(ResultSet resultSet = statement.executeQuery()) {
 
-        List<Product> products = new ArrayList<>();
+            while (resultSet.next()) {
+                int productId = resultSet.getInt("product_id");
+                String name = resultSet.getString("name");
+                String description = resultSet.getString("description");
+                float price = resultSet.getFloat("price");
 
-        while (resultSet.next()) {
-            float price = resultSet.getFloat("price");
-            String name = resultSet.getString("name");
-            String description = resultSet.getString("description");
-            int productId = resultSet.getInt("product_id");
-            String orderNumber = resultSet.getString("order_number");
-            Date date = resultSet.getDate("order_date");
+                Product product = new Product(productId, price, name, description);
 
-            System.out.println(orderNumber + "\t" + date + "\t" + name + "\t" + description + "\t" + price);
+                products.add(product);
+            }
         }
+        return products;
     }
 
-    public void showOrdersBySumAndCount(float sum, int count) throws SQLException {
+    public List<Order> showOrdersBySumAndCount(float sum, int count) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
                 connection.prepareStatement(
-                        "SELECT o.order_number, sum(pr.price) sum_order, count(*) count\n" +
+                        "SELECT o.order_number, o.order_id, o.order_date, " +
+                                "sum(pr.price) sum_order, count(*) count\n " +
                                 "FROM products pr\n" +
                                 "INNER JOIN product_order po\n" +
                                 "ON pr.product_id = po.FK_Product\n" +
@@ -54,20 +86,36 @@ public class SelectService {
         statement.setFloat(1, sum);
         statement.setInt(2, count);
 
-        ResultSet resultSet = statement.executeQuery();
+        List<Order> orders = new ArrayList<>();
 
-        while (resultSet.next()) {
-            String orderNumber = resultSet.getString("order_number");
-            System.out.println(orderNumber);
+        try(ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int orderId = resultSet.getInt("order_id");
+                String orderNumber = resultSet.getString("order_number");
+                Date date = resultSet.getDate("order_date");
+
+                List<Product> products = findProductsByOrderId(orderId);
+
+                Order order = new Order(orderId, orderNumber, date.toLocalDate());
+
+                order.setProducts(products);
+
+                orders.add(order);
+
+            }
         }
+
+        return orders;
     }
 
-    public void showOrdersByProductName(String name) throws SQLException {
+    public List<Order> showOrdersByProductName(String name) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
                 connection.prepareStatement(
-                        "SELECT o.order_number FROM products pr\n" +
+                        "SELECT o.order_number, o.order_id, o.order_date " +
+                                "FROM products pr\n" +
                                 "INNER JOIN product_order po\n" +
                                 "ON pr.product_id = po.FK_Product\n" +
                                 "INNER JOIN orders o\n" +
@@ -76,35 +124,63 @@ public class SelectService {
 
         statement.setString(1, name);
 
-        ResultSet resultSet = statement.executeQuery();
+        List<Order> orders = new ArrayList<>();
 
-        while (resultSet.next()) {
-            String orderNumber = resultSet.getString("order_number");
-            System.out.println(orderNumber);
+        try(ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int orderId = resultSet.getInt("order_id");
+                String orderNumber = resultSet.getString("order_number");
+                Date date = resultSet.getDate("order_date");
+
+                List<Product> products = findProductsByOrderId(orderId);
+
+                Order order = new Order(orderId, orderNumber, date.toLocalDate());
+
+                order.setProducts(products);
+
+                orders.add(order);
+            }
         }
+
+        return orders;
     }
 
-    public void showOrdersWithoutProductAndCurrentDate(String name) throws SQLException {
+    public List<Order> showOrdersWithoutProductAndCurrentDate(String productName) throws SQLException {
         Connection connection = DbConnector.getConnection();
 
         PreparedStatement statement =
                 connection.prepareStatement(
-                        "SELECT DISTINCT(o.order_number)\n" +
-                                "FROM products pr\n" +
-                                "INNER JOIN product_order po\n" +
-                                "ON pr.product_id = po.FK_Product\n" +
-                                "INNER JOIN orders o\n" +
-                                "ON o.order_id = po.FK_Order\n" +
+                        "SELECT DISTINCT(o.order_number), o.order_id, o.order_date\n " +
+                                "FROM products pr\n " +
+                                "INNER JOIN product_order po\n " +
+                                "ON pr.product_id = po.FK_Product\n " +
+                                "INNER JOIN orders o\n " +
+                                "ON o.order_id = po.FK_Order\n " +
                                 "WHERE pr.name != ? AND o.order_date = curdate();");
 
-        statement.setString(1, name);
+        statement.setString(1, productName);
+
+        List<Order> orders = new ArrayList<>();
 
         try (ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
+                int orderId = resultSet.getInt("order_id");
                 String orderNumber = resultSet.getString("order_number");
-                System.out.println(orderNumber);
+                Date date = resultSet.getDate("order_date");
+
+                List<Product> products = findProductsByOrderId(orderId);
+
+                Order order = new Order(orderId, orderNumber, date.toLocalDate());
+
+                order.setProducts(products);
+
+                orders.add(order);
+
             }
         }
+
+        return orders;
     }
 }
